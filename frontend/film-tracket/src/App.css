@@ -16,7 +16,9 @@
     outline-offset: 2px;
   }
 }
-
+.boo{
+  color: rgb(49, 49, 49);
+}
 .hero {
   position: relative;
 
