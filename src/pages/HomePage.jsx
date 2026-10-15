@@ -1,0 +1,68 @@
+import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { useLibrary } from '../context/LibraryContext'
+import { PosterCard } from '../components/Poster'
+
+const plural = (n) => (n === 1 ? 'odcinek' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'odcinki' : 'odcinków')
+
+function Row({ title, items, caption, empty }) {
+  return (
+    <section className="row">
+      <h2>{title}</h2>
+      {items.length === 0 ? (
+        <p className="empty">{empty}</p>
+      ) : (
+        <div className="scroller">
+          {items.map((i) => (
+            <PosterCard key={`${i.mediaType}-${i.tmdbId}`} item={i} caption={caption?.(i)} />
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
+export default function HomePage() {
+  const { user, logout } = useAuth()
+  const { items, ready } = useLibrary()
+
+  const byRecent = (a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')
+  const watching = items.filter((i) => i.status === 'watching').sort(byRecent)
+  const watchlist = items.filter((i) => i.status === 'watchlist').sort(byRecent)
+
+  return (
+    <>
+      <header className="top">
+        <div>
+          <h1 className="logo">Klaps</h1>
+          <p className="hello">Cześć, {user.name}</p>
+        </div>
+        <button className="btn ghost" onClick={logout}>Wyloguj</button>
+      </header>
+
+      {!ready ? (
+        <p className="state">Ładowanie…</p>
+      ) : (
+        <>
+          <Row
+            title="Oglądasz teraz"
+            items={watching}
+            caption={(i) => {
+              const n = i.episodes?.length || 0
+              return n ? `${n} ${plural(n)}` : 'bez odcinków'
+            }}
+            empty="Nic w trakcie. Zaznacz pierwszy odcinek serialu, a pojawi się tutaj."
+          />
+          <Row
+            title="Do obejrzenia"
+            items={watchlist}
+            empty="Lista jest pusta."
+          />
+          {watching.length + watchlist.length === 0 && (
+            <Link className="btn primary block" to="/search">Znajdź film lub serial</Link>
+          )}
+        </>
+      )}
+    </>
+  )
+}

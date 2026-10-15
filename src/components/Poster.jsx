@@ -1,0 +1,21 @@
+import { Link } from 'react-router-dom'
+import { img } from '../tmdb'
+
+export function Poster({ item, size = 'w342' }) {
+  const src = img(item.posterPath, size)
+  return src ? (
+    <img className="poster" src={src} alt="" loading="lazy" />
+  ) : (
+    <div className="poster poster-empty">{item.title?.slice(0, 1)}</div>
+  )
+}
+
+export function PosterCard({ item, caption }) {
+  return (
+    <Link className="card" to={`/title/${item.mediaType}/${item.tmdbId}`}>
+      <Poster item={item} />
+      <span className="card-title">{item.title}</span>
+      {caption && <span className="card-caption">{caption}</span>}
+    </Link>
+  )
+}
