@@ -2,7 +2,7 @@
 //  - VITE_USE_MOCK=true  -> dane w localStorage (do pracy bez backendu)
 //  - VITE_USE_MOCK=false -> prawdziwe API w Node.js (kontrakt w README.md)
 
-const MOCK = import.meta.env.VITE_USE_MOCK === 'true'
+const MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
 const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 const TOKEN_KEY = 'klaps_token'
 
