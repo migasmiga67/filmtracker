@@ -280,3 +280,18 @@ main { padding: 0 24px; }
   .pagination { flex-wrap: wrap; justify-content: center; }
   .collection-name { font-size: 1.15rem; }
 }
+
+/* Listy wyboru wspólne dla filtrów i odkrywania. */
+.select-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-width: 0; min-height: 46px; padding: 11px 12px; border: 1px solid #344b5a; border-radius: 10px; background: #111e28; color: var(--text); text-align: left; font-size: .9rem; line-height: 1.4; box-shadow: 0 2px 3px #0001; }
+.select-trigger > span:first-child { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.select-trigger:hover { background: #1c2f3b; border-color: #71818a; }
+.select-trigger[data-state="open"] { border-color: var(--accent); background: #1b2a33; box-shadow: 0 0 0 3px #f4b94218; }
+.select-chevron { display: inline-flex; flex-shrink: 0; color: var(--muted); }
+.select-trigger[data-state="open"] .select-chevron { color: var(--accent); transform: rotate(180deg); }
+.select-menu { z-index: 50; width: max(200px, var(--radix-select-trigger-width)); max-width: calc(100vw - 24px); max-height: min(320px, var(--radix-select-content-available-height)); overflow: hidden; padding: 5px; border: 1px solid #415462; border-radius: 12px; background: #192a35; color: var(--text); box-shadow: 0 16px 42px #0007, 0 2px 8px #0003; }
+.select-viewport { padding: 2px; }
+.select-option { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: relative; min-height: 44px; padding: 10px 32px 10px 12px; border-radius: 7px; font-size: .9rem; line-height: 1.4; overflow-wrap: anywhere; cursor: pointer; user-select: none; outline: none; }
+.select-option[data-state="checked"] { color: var(--accent); background: #f4b94210; font-weight: 600; }
+.select-option[data-highlighted] { background: #30434b; color: #fff3cf; }
+.select-check { display: inline-flex; position: absolute; right: 10px; color: var(--accent); }
+.select-scroll { display: flex; align-items: center; justify-content: center; height: 26px; color: var(--accent); background: #192a35; }

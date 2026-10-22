@@ -2,6 +2,7 @@ import { getToken } from '../api'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useLibrary } from '../context/LibraryContext'
+import Select from '../components/Select'
 import { PosterCard } from '../components/Poster'
 import { filterLibrary, titleMetadata } from '../lib/library'
 import { details, hasTmdbCredentials } from '../tmdb'
@@ -41,12 +42,12 @@ export default function LibraryPage() {
     <div className="quick-links"><Link className="text-link" to="/watched">Zobacz obejrzane →</Link></div>
     <div className="filters">
       <label>Tytuł<input type="search" value={filters.query} onChange={update('query')} placeholder="Szukaj w bibliotece" /></label>
-      <label>Rodzaj<select aria-label="Rodzaj" value={filters.type} onChange={update('type')}><option value="">Filmy i seriale</option><option value="movie">Filmy</option><option value="tv">Seriale</option></select></label>
-      <label>Status<select aria-label="Status" value={filters.status} onChange={update('status')}><option value="">Wszystkie statusy</option><option value="watchlist">Do obejrzenia</option><option value="watching">Oglądam</option><option value="watched">Obejrzane</option></select></label>
-      <label>Gatunek<select aria-label="Gatunek" value={filters.genre} onChange={update('genre')}><option value="">Wszystkie gatunki</option>{genres.map((g) => <option key={g}>{g}</option>)}</select></label>
-      <label>Rok<select aria-label="Rok" value={filters.year} onChange={update('year')}><option value="">Wszystkie lata</option>{years.map((y) => <option key={y}>{y}</option>)}</select></label>
-      <label>Kolekcja<select aria-label="Kolekcja" value={collectionId} onChange={(e) => setParams(e.target.value ? { collection: e.target.value } : {})}><option value="">Wszystkie kolekcje</option>{collections.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-      <label>Sortowanie<select aria-label="Sortowanie" value={filters.sort} onChange={update('sort')}><option value="recent">Ostatnio dodane</option><option value="rating">Ocena TMDB</option><option value="year">Najnowszy rok</option><option value="title">Tytuł A–Z</option></select></label>
+      <label>Rodzaj<Select label="Rodzaj" value={filters.type} onChange={(value) => setFilters((prev) => ({ ...prev, type: value }))} options={[{value:'',label:'Filmy i seriale'},{value:'movie',label:'Filmy'},{value:'tv',label:'Seriale'}]} /></label>
+      <label>Status<Select label="Status" value={filters.status} onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))} options={[{value:'',label:'Wszystkie statusy'},{value:'watchlist',label:'Do obejrzenia'},{value:'watching',label:'Oglądam'},{value:'watched',label:'Obejrzane'}]} /></label>
+      <label>Gatunek<Select label="Gatunek" value={filters.genre} onChange={(value) => setFilters((prev) => ({ ...prev, genre: value }))} options={[{value:'',label:'Wszystkie gatunki'}, ...genres.map((value) => ({value,label:value}))]} /></label>
+      <label>Rok<Select label="Rok" value={filters.year} onChange={(value) => setFilters((prev) => ({ ...prev, year: value }))} options={[{value:'',label:'Wszystkie lata'}, ...years.map((value) => ({value,label:value}))]} /></label>
+      <label>Kolekcja<Select label="Kolekcja" value={collectionId} onChange={(value) => setParams(value ? { collection: value } : {})} options={[{value:'',label:'Wszystkie kolekcje'}, ...collections.map((c) => ({value:c.id,label:c.name}))]} /></label>
+      <label>Sortowanie<Select label="Sortowanie" value={filters.sort} onChange={(value) => setFilters((prev) => ({ ...prev, sort: value }))} options={[{value:'recent',label:'Ostatnio dodane'},{value:'rating',label:'Ocena TMDB'},{value:'year',label:'Najnowszy rok'},{value:'title',label:'Tytuł A–Z'}]} /></label>
       <button className="btn small" onClick={() => { setFilters(defaults); setParams({}) }}>Wyczyść filtry</button>
     </div>
     {!ready ? <p role="status">Ładowanie biblioteki…</p> : <><p className="meta" role="status">{shown.length} z {pool.length} tytułów{collection ? ` · ${collection.name}` : ''}</p>{shown.length ? <div className="grid">{shown.map((i) => <PosterCard key={`${i.mediaType}-${i.tmdbId}`} item={i} />)}</div> : <div className="empty-panel"><h2>{items.length ? 'Brak pasujących tytułów' : 'Twoja biblioteka czeka na pierwszy seans'}</h2><p>{items.length ? 'Zmień filtry lub dodaj tytuł do wybranej kolekcji na jego stronie.' : 'Znajdź film lub serial i dodaj go do listy.'}</p><Link className="text-link" to="/search">Szukaj filmów i seriali →</Link></div>}</>}
