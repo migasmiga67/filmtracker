@@ -1,6 +1,6 @@
 const BASE = 'https://api.themoviedb.org/3'
-const TOKEN = import.meta.env.VITE_TMDB_TOKEN
-const KEY = import.meta.env.VITE_TMDB_KEY
+const TOKEN = (import.meta.env.VITE_TMDB_TOKEN || import.meta.env.TMB_TOKEN || '').trim()
+const KEY = (import.meta.env.VITE_TMDB_KEY || import.meta.env.TMB_KEY || '').trim()
 const LANG = 'pl-PL'
 export const hasTmdbCredentials = Boolean(TOKEN || KEY)
 

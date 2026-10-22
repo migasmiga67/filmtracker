@@ -31,3 +31,7 @@ Błędy: status 4xx/5xx i JSON `{ "message": "..." }`.
 ## Uwaga o bezpieczeństwie
 Zmienne `VITE_*` trafiają do kodu w przeglądarce, więc token TMDB jest publicznie widoczny.
 Token jest tylko do odczytu, ale docelowo lepiej przepuszczać zapytania do TMDB przez własne API.
+
+## Dostęp do TMDB na Vercel
+
+Ustaw `TMB_TOKEN` (API Read Access Token) lub `TMB_KEY` (API Key) w zmiennych projektu Vercel dla odpowiedniego środowiska i wykonaj Redeploy. Wystarczy jedna z nich. Obsługiwane są również `VITE_TMDB_TOKEN` i `VITE_TMDB_KEY`; mają pierwszeństwo przed odpowiadającymi im aliasami. Token ma pierwszeństwo przed kluczem API. Wszystkie te wartości trafiają do kodu przeglądarki i nie są sekretami serwera. Inne zmienne środowiska serwera nie są przez tę konfigurację udostępniane frontendowi.
