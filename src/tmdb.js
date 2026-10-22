@@ -29,6 +29,7 @@ export function normalize(r, mediaType = r.media_type) {
     title: r.title || r.name,
     posterPath: r.poster_path,
     year: date.slice(0, 4),
+    tmdbRating: Number(r.vote_average) || 0,
   }
 }
 
@@ -41,3 +42,11 @@ export async function search(query) {
 
 export const details = (type, id) => get(`/${type}/${id}`)
 export const season = (id, n) => get(`/tv/${id}/season/${n}`)
+
+export async function discover(type, category, page = 1, seed = null) {
+  const path = category === 'similar' && seed ? `/${seed.mediaType}/${seed.tmdbId}/recommendations`
+    : `/${type}/${category === 'premieres' ? (type === 'movie' ? 'now_playing' : 'on_the_air') : 'popular'}`
+  const data = await get(path, { region: 'PL', page })
+  return { items: (data.results || []).map((r) => normalize(r, category === 'similar' && seed ? seed.mediaType : type)), pages: Math.min(data.total_pages || 1, 500) }
+}
+export const watchProviders = (type, id) => get(`/${type}/${id}/watch/providers`)

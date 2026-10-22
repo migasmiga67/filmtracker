@@ -35,3 +35,20 @@ Token jest tylko do odczytu, ale docelowo lepiej przepuszczać zapytania do TMDB
 ## Dostęp do TMDB na Vercel
 
 Ustaw `VITE_TMBD_TOKEN` (API Read Access Token) lub `VITE_TMBD_KEY` (API Key) w zmiennych projektu Vercel dla odpowiedniego środowiska i wykonaj Redeploy. Wystarczy jedna z nich. Nazwy `VITE_TMBD_TOKEN` i `VITE_TMBD_KEY` mają pierwszeństwo. Wielkość liter ma znaczenie — używaj dokładnie tych nazw. Dla zgodności obsługiwane są też `TMBD_TOKEN` / `TMBD_KEY`, następnie `VITE_TMDB_TOKEN` / `VITE_TMDB_KEY`, a następnie `TMB_TOKEN` / `TMB_KEY`. Token ma pierwszeństwo przed kluczem API. Wszystkie te wartości trafiają do kodu przeglądarki i nie są sekretami serwera. Inne zmienne środowiska serwera nie są przez tę konfigurację udostępniane frontendowi.
+
+## Funkcje
+
+- **Start:** losowanie z listy „Do obejrzenia” (bez powtarzania poprzedniego wyboru, jeśli są inne tytuły), rozpoczęte seriale z postępem i następnym nieoznaczonym odcinkiem.
+- **Biblioteka:** wyszukiwanie po tytule, filtry rodzaju, statusu, gatunku, roku i kolekcji; sortowanie według daty dodania, oceny TMDB, roku lub tytułu.
+- **Kolekcje:** tworzenie, zmiana nazwy, usuwanie i przypisywanie tytułów na stronie filmu/serialu. Jeden tytuł może należeć do wielu kolekcji. Usunięcie kolekcji nie usuwa biblioteki; usunięcie pozycji z biblioteki usuwa jej przypisania.
+- **Odkrywaj:** popularne filmy/seriale, filmy aktualnie w kinach w Polsce, emitowane seriale i rekomendacje TMDB dla wybranego tytułu z biblioteki. Dostępna jest paginacja i ponawianie żądań.
+- **Szczegóły tytułu:** dostępność w Polsce z podziałem na abonament, bezpłatny dostęp, reklamy, wypożyczenie i zakup (TMDB / JustWatch), niezależna obsługa błędów platform.
+- **Statystyki:** obejrzane filmy, ukończone seriale, odcinki, szacowany czas oglądania i najczęściej oglądane gatunki. Czas seriali korzysta ze średniej długości odcinka; brakujące dane nie są zgadywane.
+
+Starsze wpisy zachowują dotychczasowe dane. W Bibliotece przycisk **Uzupełnij dane** pobiera ich metadane TMDB. Nowo dodawane tytuły otrzymują je automatycznie, jeśli API jest dostępne. Postęp obejmuje znane odcinki regularnych sezonów; wskazanie następnego odcinka nie oznacza, że miał już premierę. Status „Obejrzane” liczy cały znany serial jako ukończony.
+
+Funkcje biblioteki i kolekcji działają w trybie lokalnym i z MongoDB. Wyszukiwanie, odkrywanie, metadane i platformy wymagają dostępu do TMDB. Dane filmowe: TMDB; produkt nie jest zatwierdzony ani certyfikowany przez TMDB.
+
+Po aktualizacji **najpierw wdróż backend na Render, następnie frontend na Vercel**, aby API kolekcji było dostępne. Nie potrzeba nowych zmiennych środowiskowych ani ręcznej migracji istniejących wpisów.
+
+Testy logiki frontendu: `npm test`. Testy HTTP/MongoDB: `cd backend && npm test` (uruchomiona baza).

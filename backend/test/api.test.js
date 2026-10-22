@@ -99,6 +99,37 @@ test('API integration with MongoDB', async (t) => {
       assert.equal((await request('/reviews/movie/603', { token: alice.token, method: 'PUT', body })).status, 400)
     }
   })
+  await t.test('new metadata persists, validates and remains backward compatible', async () => {
+    const enriched = { ...item, year: '1999', genres: ['Science fiction'], tmdbRating: 8.7, runtime: 136, metadataVersion: 1 }
+    const r = await request('/library/movie/603', { token: alice.token, method: 'PUT', body: enriched })
+    assert.equal(r.status, 200); assert.equal(r.data.runtime,136); assert.equal(r.data.tmdbRating,8.7); assert.ok(r.data.createdAt)
+    assert.deepEqual(r.data.genres,['Science fiction'])
+    assert.equal((await request('/library/movie/603', { token: alice.token, method: 'PUT', body: { ...enriched, runtime: -1 } })).status,400)
+    assert.equal((await request('/library/movie/603', { token: alice.token, method: 'PUT', body: { ...enriched, tmdbRating: 11 } })).status,400)
+  })
+  await t.test('collection CRUD and membership are private, idempotent and survive library edits', async () => {
+    const created=await request('/collections',{token:alice.token,method:'POST',body:{name:' Weekend '}})
+    assert.equal(created.status,201);assert.equal(created.data.name,'Weekend')
+    const id=created.data.id
+    assert.equal((await request('/collections',{token:bob.token})).data.length,0)
+    for(const method of ['PUT','DELETE']) assert.equal((await request(`/collections/${id}`,{token:bob.token,method,body:method==='PUT'?{name:'Hijack'}:undefined})).status,404)
+    assert.equal((await request(`/collections/${id}/items/tv/99`,{token:bob.token,method:'PUT'})).status,400)
+    for(let i=0;i<2;i++) assert.equal((await request(`/collections/${id}/items/movie/603`,{token:alice.token,method:'PUT'})).status,200)
+    assert.deepEqual((await request('/collections',{token:alice.token})).data[0].items,[{mediaType:'movie',tmdbId:603}])
+    await request(`/collections/${id}`,{token:alice.token,method:'PUT',body:{name:'Na wieczór'}})
+    assert.equal((await request('/collections',{token:alice.token})).data[0].name,'Na wieczór')
+    await request(`/collections/${id}/items/movie/603`,{token:alice.token,method:'DELETE'})
+    assert.equal((await request('/collections',{token:alice.token})).data[0].items.length,0)
+    await request(`/collections/${id}/items/movie/603`,{token:alice.token,method:'PUT'})
+    await request('/library/movie/603',{token:alice.token,method:'DELETE'})
+    assert.equal((await request('/collections',{token:alice.token})).data[0].items.length,0)
+    await request('/library/movie/603',{token:alice.token,method:'PUT',body:item})
+    await request(`/collections/${id}`,{token:alice.token,method:'DELETE'})
+    assert.equal((await request('/library',{token:alice.token})).data.length,2)
+    assert.equal((await request('/collections',{token:alice.token})).data.length,0)
+    assert.equal((await request('/collections',{token:alice.token,method:'POST',body:{name:'  '}})).status,400)
+    assert.equal((await request('/collections/not-an-id',{token:alice.token,method:'DELETE'})).status,400)
+  })
   await t.test('delete is idempotent and writes persist across a new DB connection', async () => {
     const second = await mongoose.createConnection(process.env.TEST_MONGODB_URI || 'mongodb://127.0.0.1:27017', { dbName: connection.name }).asPromise()
     try { assert.equal(await createModels(second).Library.countDocuments({ userId: alice.user.id }), 2) } finally { await second.close() }

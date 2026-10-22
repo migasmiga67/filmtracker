@@ -3,6 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { details, img, season as fetchSeason } from '../tmdb'
 import { api } from '../api'
 import { useLibrary } from '../context/LibraryContext'
+import { titleMetadata } from '../lib/library'
+import Progress from '../components/Progress'
+import WatchProviders from '../components/WatchProviders'
+import TitleCollections from '../components/TitleCollections'
 import Stars from '../components/Stars'
 
 const STATUSES = {
@@ -33,7 +37,7 @@ export default function TitlePage() {
   if (!info) return <p className="state">Ładowanie…</p>
 
   const title = info.title || info.name
-  const base = { tmdbId: info.id, mediaType: type, title, posterPath: info.poster_path }
+  const base = { ...titleMetadata(info, type), tmdbId: info.id, mediaType: type, title, posterPath: info.poster_path }
   const year = (info.release_date || info.first_air_date || '').slice(0, 4)
   const meta = [
     type === 'tv' ? 'Serial' : 'Film',
@@ -43,7 +47,7 @@ export default function TitlePage() {
   ].filter(Boolean)
 
   const available = type === 'movie' ? ['watchlist', 'watched'] : Object.keys(STATUSES)
-  const setStatus = (status) => save({ ...base, episodes: item?.episodes || [], ...item, status })
+  const setStatus = (status) => save({ ...item, ...base, episodes: item?.episodes || [], status })
 
   const backdrop = img(info.backdrop_path, 'w780')
 
@@ -75,13 +79,17 @@ export default function TitlePage() {
         <button className="btn link" onClick={() => remove(type, id)}>Usuń z mojej listy</button>
       )}
 
+      {item?.mediaType === 'tv' && <Progress item={{ ...item, ...titleMetadata(info, type) }} />}
+      <TitleCollections item={item} />
+      <WatchProviders key={`providers-${type}-${id}`} type={type} id={id} />
+
       {info.overview && <p className="overview">{info.overview}</p>}
 
       {type === 'tv' && (
-        <Episodes key={`${type}-${id}`} info={info} item={item} base={base} save={save} />
+        <Episodes key={`episodes-${type}-${id}`} info={info} item={item} base={base} save={save} />
       )}
 
-      <Reviews key={`${type}-${id}`} type={type} id={id} />
+      <Reviews key={`reviews-${type}-${id}`} type={type} id={id} />
     </article>
   )
 }
@@ -112,7 +120,7 @@ function Episodes({ info, item, base, save }) {
   const watched = new Set(item?.episodes || [])
   const key = (e) => `${num}x${e.episode_number}`
   const update = (next) =>
-    save({ ...base, ...item, episodes: next, status: item?.status === 'watched' ? 'watched' : 'watching' })
+    save({ ...item, ...base, episodes: next, status: item?.status === 'watched' ? 'watched' : 'watching' })
 
   const toggle = (e) => {
     const next = new Set(watched)

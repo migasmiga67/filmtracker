@@ -2,6 +2,10 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import BottomNav from './components/BottomNav'
 import AuthPage from './pages/AuthPage'
+import LibraryPage from './pages/LibraryPage'
+import CollectionsPage from './pages/CollectionsPage'
+import DiscoverPage from './pages/DiscoverPage'
+import StatsPage from './pages/StatsPage'
 import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
 import WatchedPage from './pages/WatchedPage'
@@ -25,6 +29,10 @@ export default function App() {
         {error && <div className="library-alert" role="alert"><p>{error}</p><div><button className="btn small" onClick={() => reload()}>Wczytaj ponownie</button><button className="btn ghost" onClick={clearError} aria-label="Zamknij komunikat">×</button></div></div>}
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/library" element={<LibraryPage />} />
+          <Route path="/collections" element={<CollectionsPage />} />
+          <Route path="/discover" element={<DiscoverPage />} />
+          <Route path="/stats" element={<StatsPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/watched" element={<WatchedPage />} />
           <Route path="/title/:type/:id" element={<TitlePage />} />

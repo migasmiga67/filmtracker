@@ -16,6 +16,14 @@ const targetSchema = z.object({
   tmdbId: z.string().regex(/^[1-9]\d*$/).transform(Number).refine(Number.isSafeInteger),
 })
 const itemSchema = z.object({
+  year: z.string().regex(/^(\d{4})?$/).optional(),
+  genres: z.array(z.string().min(1).max(80)).max(30).optional(),
+  tmdbRating: z.number().min(0).max(10).optional(),
+  runtime: z.number().int().min(0).max(10000).optional(),
+  episodeRuntime: z.number().int().min(0).max(10000).optional(),
+  totalEpisodes: z.number().int().min(0).max(100000).optional(),
+  seasons: z.array(z.object({ number: z.number().int().min(1).max(10000), count: z.number().int().min(0).max(10000) })).max(1000).optional(),
+  metadataVersion: z.literal(1).optional(),
   title: z.string().trim().min(1).max(300),
   posterPath: z.string().max(300).regex(/^\/[a-zA-Z0-9_./-]+$/).nullable().optional().default(null),
   status: z.enum(['watchlist', 'watching', 'watched']),
@@ -23,12 +31,12 @@ const itemSchema = z.object({
 })
 const reviewSchema = z.object({ rating: z.number().int().min(1).max(5), text: z.string().trim().max(1000).optional().default('') })
 const publicUser = (u) => ({ id: String(u._id), name: u.name, email: u.email })
-const publicItem = (i) => ({ tmdbId: i.tmdbId, mediaType: i.mediaType, title: i.title, posterPath: i.posterPath, status: i.status, episodes: i.episodes, updatedAt: i.updatedAt })
+const publicItem = (i) => ({ tmdbId: i.tmdbId, mediaType: i.mediaType, title: i.title, posterPath: i.posterPath, status: i.status, episodes: i.episodes, updatedAt: i.updatedAt, createdAt: i.createdAt, year: i.year, genres: i.genres, tmdbRating: i.tmdbRating, runtime: i.runtime, episodeRuntime: i.episodeRuntime, totalEpisodes: i.totalEpisodes, seasons: i.seasons, metadataVersion: i.metadataVersion })
 const publicReview = (r) => ({ userName: r.userName, rating: r.rating, text: r.text, updatedAt: r.updatedAt })
 
 export function createApp({ models, jwtSecret, corsOrigins, isReady = () => true, authLimit = 20 }) {
   if (!jwtSecret || jwtSecret.length < 32) throw new Error('JWT_SECRET musi mieć co najmniej 32 znaki')
-  const { User, Library, Review } = models
+  const { User, Library, Review, Collection } = models
   const app = express()
   app.disable('x-powered-by')
   // Keep Express's default trust proxy=false. Configure only known proxy hops when deploying.
@@ -94,8 +102,42 @@ export function createApp({ models, jwtSecret, corsOrigins, isReady = () => true
     res.json(publicItem(item))
   })
   app.delete('/api/library/:mediaType/:tmdbId', async (req, res) => {
-    await Library.deleteOne({ userId: req.user._id, ...targetSchema.parse(req.params) })
+    const target = targetSchema.parse(req.params)
+    await Library.deleteOne({ userId: req.user._id, ...target })
+    await Collection.updateMany({ userId: req.user._id }, { $pull: { items: target } })
     res.json({ ok: true })
+  })
+  const collectionId = z.string().regex(/^[a-f\d]{24}$/i)
+  const collectionName = z.object({ name: z.string().trim().min(1).max(80) })
+  const publicCollection = (c) => ({ id: String(c._id), name: c.name, items: c.items.map((i) => ({ mediaType: i.mediaType, tmdbId: i.tmdbId })) })
+  app.get('/api/collections', async (req, res) => {
+    res.json((await Collection.find({ userId: req.user._id }).sort({ createdAt: 1 })).map(publicCollection))
+  })
+  app.post('/api/collections', async (req, res) => {
+    const data = collectionName.parse(req.body)
+    res.status(201).json(publicCollection(await Collection.create({ userId: req.user._id, ...data, items: [] })))
+  })
+  app.put('/api/collections/:id', async (req, res) => {
+    const collection = await Collection.findOneAndUpdate({ _id: collectionId.parse(req.params.id), userId: req.user._id }, { $set: collectionName.parse(req.body) }, { returnDocument: 'after' })
+    if (!collection) return res.status(404).json({ message: 'Nie znaleziono kolekcji' })
+    res.json(publicCollection(collection))
+  })
+  app.delete('/api/collections/:id', async (req, res) => {
+    const result = await Collection.deleteOne({ _id: collectionId.parse(req.params.id), userId: req.user._id })
+    if (!result.deletedCount) return res.status(404).json({ message: 'Nie znaleziono kolekcji' })
+    res.json({ ok: true })
+  })
+  app.put('/api/collections/:id/items/:mediaType/:tmdbId', async (req, res) => {
+    const target = targetSchema.parse(req.params)
+    if (!await Library.exists({ userId: req.user._id, ...target })) return res.status(400).json({ message: 'Najpierw dodaj tytuł do biblioteki' })
+    const collection = await Collection.findOneAndUpdate({ _id: collectionId.parse(req.params.id), userId: req.user._id }, { $addToSet: { items: target } }, { returnDocument: 'after' })
+    if (!collection) return res.status(404).json({ message: 'Nie znaleziono kolekcji' })
+    res.json(publicCollection(collection))
+  })
+  app.delete('/api/collections/:id/items/:mediaType/:tmdbId', async (req, res) => {
+    const collection = await Collection.findOneAndUpdate({ _id: collectionId.parse(req.params.id), userId: req.user._id }, { $pull: { items: targetSchema.parse(req.params) } }, { returnDocument: 'after' })
+    if (!collection) return res.status(404).json({ message: 'Nie znaleziono kolekcji' })
+    res.json(publicCollection(collection))
   })
   app.get('/api/reviews/:mediaType/:tmdbId', async (req, res) => {
     const reviews = await Review.find(targetSchema.parse(req.params)).sort({ updatedAt: -1 }).lean()

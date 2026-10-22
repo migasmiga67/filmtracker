@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Progress from './Progress'
 import { img } from '../tmdb'
 
 export function Poster({ item, size = 'w342' }) {
@@ -16,6 +17,8 @@ export function PosterCard({ item, caption }) {
       <Poster item={item} />
       <span className="card-title">{item.title}</span>
       {caption && <span className="card-caption">{caption}</span>}
+      {item.mediaType === 'tv' && item.status && <Progress item={item} />}
+      {item.tmdbRating > 0 && <small className="meta">★ {item.tmdbRating.toFixed(1)} TMDB{item.year ? ` · ${item.year}` : ''}</small>}
     </Link>
   )
 }

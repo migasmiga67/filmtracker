@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { search, hasTmdbCredentials } from '../tmdb'
 import { useLibrary } from '../context/LibraryContext'
+import { useAddTitle } from '../lib/useAddTitle'
 import { Poster } from '../components/Poster'
 
 export default function SearchPage() {
-  const { find, save } = useLibrary()
+  const { find } = useLibrary()
+  const { add, adding } = useAddTitle()
   const [q, setQ] = useState('')
   const [attempt, setAttempt] = useState(0)
   const [error, setError] = useState('')
@@ -34,15 +36,6 @@ export default function SearchPage() {
     }
   }, [q, attempt])
 
-  const addToWatchlist = (r) =>
-    save({
-      tmdbId: r.tmdbId,
-      mediaType: r.mediaType,
-      title: r.title,
-      posterPath: r.posterPath,
-      status: 'watchlist',
-      episodes: [],
-    })
 
   return (
     <>
@@ -78,7 +71,7 @@ export default function SearchPage() {
               {inLib ? (
                 <span className="chip">{{ watchlist: 'Na liście', watching: 'Oglądam', watched: 'Obejrzane' }[inLib.status]}</span>
               ) : (
-                <button className="btn small" aria-label={`Dodaj „${r.title}” do listy`} onClick={() => addToWatchlist(r)}>+ Dodaj</button>
+                <button className="btn small" aria-label={`Dodaj „${r.title}” do listy`} disabled={adding.has(`${r.mediaType}-${r.tmdbId}`)} onClick={() => add(r)}>{adding.has(`${r.mediaType}-${r.tmdbId}`) ? 'Dodaję…' : '+ Dodaj'}</button>
               )}
             </li>
           )

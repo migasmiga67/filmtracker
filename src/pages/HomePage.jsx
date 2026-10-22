@@ -1,9 +1,10 @@
+import { useState } from 'react'
+import { pickWatchlist } from '../lib/library'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLibrary } from '../context/LibraryContext'
 import { PosterCard } from '../components/Poster'
 
-const plural = (n) => (n === 1 ? 'odcinek' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'odcinki' : 'odcinków')
 
 function Row({ title, items, caption, empty }) {
   return (
@@ -25,6 +26,9 @@ function Row({ title, items, caption, empty }) {
 export default function HomePage() {
   const { user, logout } = useAuth()
   const { items, ready } = useLibrary()
+  const [pickedKey, setPickedKey] = useState('')
+  const picked = items.find((i) => `${i.mediaType}-${i.tmdbId}` === pickedKey && i.status === 'watchlist')
+  const draw = () => { const item = pickWatchlist(items, pickedKey); setPickedKey(item ? `${item.mediaType}-${item.tmdbId}` : '') }
 
   const byRecent = (a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')
   const watching = items.filter((i) => i.status === 'watching').sort(byRecent)
@@ -45,13 +49,12 @@ export default function HomePage() {
         <p className="state">Ładowanie…</p>
       ) : (
         <>
+          <section className="roulette feature-panel"><div><p className="eyebrow">Decyzję zostaw nam</p><h2>Co dziś obejrzeć?</h2><p>Wylosuj tytuł ze swojej listy „Do obejrzenia”.</p><button className="btn primary" disabled={!watchlist.length} onClick={draw}>{picked ? 'Losuj ponownie' : 'Wylosuj seans'}</button>{!watchlist.length && <p className="hint">Najpierw dodaj coś do listy.</p>}</div>{picked && <div className="random-pick" role="status"><PosterCard item={picked} /><Link className="text-link" to={`/title/${picked.mediaType}/${picked.tmdbId}`}>Twój dzisiejszy seans →</Link></div>}</section>
+          <div className="quick-links"><Link className="btn" to="/library">Moja biblioteka</Link><Link className="btn" to="/collections">Moje kolekcje</Link><Link className="btn" to="/discover">Odkrywaj filmy</Link></div>
           <Row
             title="Oglądasz teraz"
             items={watching}
-            caption={(i) => {
-              const n = i.episodes?.length || 0
-              return n ? `${n} ${plural(n)}` : 'bez odcinków'
-            }}
+
             empty="Nic w trakcie. Zaznacz pierwszy odcinek serialu, a pojawi się tutaj."
           />
           <Row

@@ -59,3 +59,20 @@ Wszystkie poniższe ścieżki mają prefiks `/api`. Oprócz `GET /health`, `POST
 `mediaType`: `movie` lub `tv`; `tmdbId`: dodatnia bezpieczna liczba całkowita. `status`: `watchlist`, `watching` (tylko seriale), `watched`. Odcinki serialu: np. `1x1`. Ocena: liczba całkowita 1–5. Nazwa: 1–80 znaków, hasło: co najmniej 6 znaków i najwyżej 72 bajty UTF-8, tekst opinii: maksymalnie 1000 znaków. Czas aktualizacji i właściciel pochodzą z serwera. Każda osoba ma jedną opinię na tytuł; ponowny PUT ją aktualizuje. Średnia uwzględnia też oceny bez tekstu; publiczna lista zawiera wyłącznie opinie z tekstem, bez e-maili i identyfikatorów użytkowników.
 
 Błędy mają format `{message}` (przy walidacji również `errors`): 400 niepoprawne dane, 401 brak/wygasła sesja, 403 niedozwolone źródło, 404 brak trasy, 409 konflikt, 413 za duże żądanie, 429 limit prób, 500 błąd serwera. Health zwraca 503 po utracie połączenia z bazą.
+
+## Kolekcje i metadane biblioteki
+
+Pozycje biblioteki obsługują opcjonalne `year`, `genres` (nazwy), `tmdbRating` (0–10), `runtime`, `episodeRuntime` (minuty), `totalEpisodes`, `seasons: [{number,count}]` i `metadataVersion: 1`. Pole `createdAt` jest nadawane przez serwer i służy do sortowania według daty dodania. Starsze dokumenty działają bez tych pól. Oceny TMDB są danymi katalogowymi, odrębnymi od opinii użytkowników Klaps.
+
+API kolekcji wymaga tokena i działa tylko na danych zalogowanej osoby:
+
+| Metoda | Ścieżka (prefiks `/api`) | Działanie |
+|---|---|---|
+| GET | /collections | `[{id,name,items:[{mediaType,tmdbId}]}]` |
+| POST | /collections | `{name}` → nowa kolekcja, status 201 |
+| PUT | /collections/:id | `{name}` → zmiana nazwy |
+| DELETE | /collections/:id | usunięcie kolekcji, biblioteka zostaje |
+| PUT | /collections/:id/items/:mediaType/:tmdbId | przypisanie istniejącego tytułu z własnej biblioteki, bez duplikatów |
+| DELETE | /collections/:id/items/:mediaType/:tmdbId | usunięcie przypisania |
+
+Nazwa: 1–80 znaków. Obca lub nieistniejąca kolekcja zwraca 404. Usunięcie tytułu z biblioteki usuwa jego przypisania do kolekcji użytkownika.
