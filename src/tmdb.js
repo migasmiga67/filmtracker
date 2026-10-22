@@ -2,8 +2,10 @@ const BASE = 'https://api.themoviedb.org/3'
 const TOKEN = import.meta.env.VITE_TMDB_TOKEN
 const KEY = import.meta.env.VITE_TMDB_KEY
 const LANG = 'pl-PL'
+export const hasTmdbCredentials = Boolean(TOKEN || KEY)
 
 async function get(path, params = {}) {
+  if (!hasTmdbCredentials) throw new Error('Wyszukiwanie wymaga skonfigurowania dostępu do TMDB. Twoja biblioteka nadal jest dostępna.')
   const url = new URL(BASE + path)
   url.searchParams.set('language', LANG)
   if (!TOKEN && KEY) url.searchParams.set('api_key', KEY)
@@ -11,7 +13,7 @@ async function get(path, params = {}) {
   const res = await fetch(url, {
     headers: TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {},
   })
-  if (!res.ok) throw new Error('Nie udało się pobrać danych z TMDB')
+  if (!res.ok) throw new Error(res.status === 401 ? 'Dostęp do TMDB wygasł lub jest nieprawidłowy.' : 'Nie udało się pobrać danych z TMDB. Spróbuj ponownie.')
   return res.json()
 }
 

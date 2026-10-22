@@ -8,9 +8,9 @@ const plural = (n) => (n === 1 ? 'odcinek' : n % 10 >= 2 && n % 10 <= 4 && (n % 
 function Row({ title, items, caption, empty }) {
   return (
     <section className="row">
-      <h2>{title}</h2>
+      <h2>{title} <span className="count">{items.length}</span></h2>
       {items.length === 0 ? (
-        <p className="empty">{empty}</p>
+        <div className="empty-panel"><p>{empty}</p><Link className="text-link" to="/search">Znajdź coś do obejrzenia →</Link></div>
       ) : (
         <div className="scroller">
           {items.map((i) => (
@@ -34,12 +34,13 @@ export default function HomePage() {
     <>
       <header className="top">
         <div>
-          <h1 className="logo">Klaps</h1>
+          <p className="eyebrow">Twój seans, Twoje tempo</p><h1 className="logo">Klaps<span className="brand-dot">.</span></h1>
           <p className="hello">Cześć, {user.name}</p>
         </div>
         <button className="btn ghost" onClick={logout}>Wyloguj</button>
       </header>
 
+      <section className="library-intro"><div><p className="eyebrow">Wszystko w jednym miejscu</p><h2>Jeszcze jeden odcinek?</h2><p>Wróć do ulubionych historii albo zaplanuj kolejny seans.</p></div><Link className="btn primary" to="/search">Znajdź film lub serial →</Link></section>
       {!ready ? (
         <p className="state">Ładowanie…</p>
       ) : (
@@ -58,9 +59,7 @@ export default function HomePage() {
             items={watchlist}
             empty="Lista jest pusta."
           />
-          {watching.length + watchlist.length === 0 && (
-            <Link className="btn primary block" to="/search">Znajdź film lub serial</Link>
-          )}
+
         </>
       )}
     </>

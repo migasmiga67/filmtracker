@@ -6,7 +6,7 @@ export function Poster({ item, size = 'w342' }) {
   return src ? (
     <img className="poster" src={src} alt="" loading="lazy" />
   ) : (
-    <div className="poster poster-empty">{item.title?.slice(0, 1)}</div>
+    <div className="poster poster-empty" aria-hidden="true">{item.title?.slice(0, 1)}</div>
   )
 }
 

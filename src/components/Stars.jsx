@@ -17,8 +17,17 @@ export default function Stars({ value = 0, onChange, size = 28 }) {
             type="button"
             role="radio"
             aria-checked={value === n}
+            tabIndex={value === n || (!value && n === 1) ? 0 : -1}
+            onKeyDown={(e) => {
+              const delta = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key]
+              if (!delta && e.key !== 'Home' && e.key !== 'End') return
+              e.preventDefault()
+              const next = e.key === 'Home' ? 1 : e.key === 'End' ? 5 : ((n - 1 + delta + 5) % 5) + 1
+              onChange(next)
+              e.currentTarget.parentElement.querySelectorAll('button')[next - 1].focus()
+            }}
             aria-label={`${n} z 5`}
-            onClick={() => onChange(n === value ? 0 : n)}
+            onClick={() => onChange(n)}
           >
             {star}
           </button>

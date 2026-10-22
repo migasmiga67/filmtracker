@@ -19,14 +19,17 @@ export default function TitlePage() {
 
   const [info, setInfo] = useState(null)
   const [error, setError] = useState('')
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     setInfo(null)
     setError('')
-    details(type, id).then(setInfo).catch((e) => setError(e.message))
-  }, [type, id])
+    let cancelled = false
+    details(type, id).then((data) => { if (!cancelled) setInfo(data) }).catch((e) => { if (!cancelled) setError(e.message) })
+    return () => { cancelled = true }
+  }, [type, id, attempt])
 
-  if (error) return <p className="error">{error}</p>
+  if (error) return <div className="empty-panel"><h1>Nie udało się wczytać tytułu</h1><p className="error" role="alert">{error}</p><button className="btn primary" onClick={() => setAttempt((n) => n + 1)}>Spróbuj ponownie</button> <button className="btn" onClick={() => navigate('/')}>Moja biblioteka</button></div>
   if (!info) return <p className="state">Ładowanie…</p>
 
   const title = info.title || info.name
@@ -63,7 +66,7 @@ export default function TitlePage() {
 
       <div className="segmented" role="group" aria-label="Status">
         {available.map((s) => (
-          <button key={s} className={item?.status === s ? 'active' : ''} onClick={() => setStatus(s)}>
+          <button key={s} aria-pressed={item?.status === s} className={item?.status === s ? 'active' : ''} onClick={() => setStatus(s)}>
             {STATUSES[s]}
           </button>
         ))}
@@ -75,10 +78,10 @@ export default function TitlePage() {
       {info.overview && <p className="overview">{info.overview}</p>}
 
       {type === 'tv' && (
-        <Episodes info={info} item={item} base={base} save={save} />
+        <Episodes key={`${type}-${id}`} info={info} item={item} base={base} save={save} />
       )}
 
-      <Reviews type={type} id={id} />
+      <Reviews key={`${type}-${id}`} type={type} id={id} />
     </article>
   )
 }
@@ -88,15 +91,21 @@ function Episodes({ info, item, base, save }) {
   const [num, setNum] = useState(seasons[0]?.season_number)
   const [eps, setEps] = useState([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     if (num == null) return
+    let cancelled = false
     setLoading(true)
+    setError('')
+    setEps([])
     fetchSeason(info.id, num)
-      .then((s) => setEps(s.episodes || []))
-      .catch(() => setEps([]))
-      .finally(() => setLoading(false))
-  }, [info.id, num])
+      .then((s) => { if (!cancelled) setEps(s.episodes || []) })
+      .catch(() => { if (!cancelled) setError('Nie udało się wczytać odcinków.') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [info.id, num, attempt])
 
   if (!seasons.length) return null
 
@@ -120,13 +129,13 @@ function Episodes({ info, item, base, save }) {
   return (
     <section className="episodes">
       <h2>Odcinki</h2>
-      <div className="season-tabs" role="tablist">
+      <div className="season-tabs" role="group" aria-label="Wybierz sezon">
         {seasons.map((s) => (
           <button
             key={s.season_number}
-            role="tab"
-            aria-selected={s.season_number === num}
+            aria-pressed={s.season_number === num}
             className={s.season_number === num ? 'active' : ''}
+            aria-label={`Sezon ${s.season_number}`}
             onClick={() => setNum(s.season_number)}
           >
             {s.season_number}
@@ -136,7 +145,9 @@ function Episodes({ info, item, base, save }) {
 
       {loading ? (
         <p className="state">Ładowanie odcinków…</p>
-      ) : (
+      ) : error ? (
+        <div role="alert"><p className="error">{error}</p><button className="btn small" onClick={() => setAttempt((n) => n + 1)}>Spróbuj ponownie</button></div>
+      ) : eps.length === 0 ? <p className="empty">Brak odcinków w tym sezonie.</p> : (
         <>
           <button className="btn small" onClick={toggleSeason}>
             {allDone ? 'Odznacz cały sezon' : 'Zaznacz cały sezon'}
@@ -177,6 +188,7 @@ function Reviews({ type, id }) {
 
   useEffect(() => {
     setData(null)
+    setMsg('')
     load().catch((e) => setMsg(e.message))
   }, [type, id])
 
@@ -217,10 +229,13 @@ function Reviews({ type, id }) {
         </div>
       )}
 
-      <form onSubmit={submit} className="review-form">
+      <form onSubmit={submit} className="review-form" aria-busy={!data || busy}>
+        {!data && !msg && <p role="status">Ładowanie opinii…</p>}
+        <fieldset disabled={!data || busy}>
         <p>Twoja ocena</p>
         <Stars value={rating} onChange={setRating} />
         <textarea
+          aria-label="Treść opinii (opcjonalnie)"
           rows="3"
           maxLength={1000}
           placeholder="Napisz kilka słów (opcjonalnie)"
@@ -230,6 +245,8 @@ function Reviews({ type, id }) {
         <button className="btn primary" disabled={busy}>
           {data?.mine ? 'Zapisz zmiany' : 'Dodaj opinię'}
         </button>
+        </fieldset>
+        {!data && msg && <button type="button" className="btn small" onClick={() => { setMsg(''); load().catch((e) => setMsg(e.message)) }}>Spróbuj ponownie</button>}
         {msg && <p className={msg === 'Zapisano' ? 'ok' : 'error'} role="status">{msg}</p>}
       </form>
 

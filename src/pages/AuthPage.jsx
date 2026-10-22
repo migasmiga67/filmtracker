@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { isMock } from '../api'
 import { useAuth } from '../context/AuthContext'
 
 export default function AuthPage() {
@@ -18,6 +19,10 @@ export default function AuthPage() {
       setError('Hasło musi mieć co najmniej 6 znaków')
       return
     }
+    if (isRegister && !form.name.trim()) {
+      setError('Podaj nazwę użytkownika')
+      return
+    }
     setBusy(true)
     try {
       if (isRegister) await register(form.name.trim(), form.email, form.password)
@@ -31,17 +36,18 @@ export default function AuthPage() {
   return (
     <div className="auth">
       <div className="auth-brand">
-        <h1>Klaps</h1>
+        <p className="eyebrow">Twoja osobista filmoteka</p><h1>Klaps<span className="brand-dot">.</span></h1>
         <p>Zapisuj, co obejrzałeś. Wiedz, na którym odcinku skończyłeś.</p>
       </div>
 
       <form onSubmit={submit} className="auth-form">
+        <p className="auth-caption">{isRegister ? 'Zacznij zbierać historie, do których chcesz wracać.' : 'Dobrze Cię widzieć. Wróć do swoich historii.'}</p>
         <h2>{isRegister ? 'Załóż konto' : 'Zaloguj się'}</h2>
 
         {isRegister && (
           <label>
             Nazwa użytkownika
-            <input value={form.name} onChange={set('name')} required autoComplete="nickname" />
+            <input value={form.name} onChange={set('name')} required maxLength={80} autoComplete="nickname" />
           </label>
         )}
         <label>
@@ -55,10 +61,13 @@ export default function AuthPage() {
             value={form.password}
             onChange={set('password')}
             required
+            minLength={isRegister ? 6 : undefined}
+            aria-describedby={isRegister ? "password-hint" : undefined}
             autoComplete={isRegister ? 'new-password' : 'current-password'}
           />
         </label>
 
+        {isRegister && <small id="password-hint" className="hint">Użyj co najmniej 6 znaków. {isMock && 'W trybie lokalnym wybierz hasło testowe.'}</small>}
         {error && <p className="error" role="alert">{error}</p>}
 
         <button className="btn primary" disabled={busy}>
@@ -67,6 +76,7 @@ export default function AuthPage() {
 
         <button
           type="button"
+          disabled={busy}
           className="btn link"
           onClick={() => {
             setMode(isRegister ? 'login' : 'register')
@@ -76,6 +86,7 @@ export default function AuthPage() {
           {isRegister ? 'Masz już konto? Zaloguj się' : 'Nie masz konta? Zarejestruj się'}
         </button>
       </form>
+      <p className="auth-footer">Twoje filmy. Twoje seriale. Żadnych zgubionych odcinków.</p>
     </div>
   )
 }
