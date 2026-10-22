@@ -1,4 +1,4 @@
-# Klaps – tracker filmów i seriali (frontend)
+# Klaps – tracker filmów i seriali
 
 ## Uruchomienie
 ```bash
@@ -7,10 +7,10 @@ npm run dev
 ```
 Domyślnie `VITE_USE_MOCK=true` w `.env`: konta, listy i opinie zapisują się w localStorage,
 a filmy/seriale, plakaty, opisy i odcinki pochodzą z prawdziwego TMDB.
-Gdy backend będzie gotowy: `VITE_USE_MOCK=false` i ustaw `VITE_API_URL`.
+Backend Node.js + MongoDB jest w folderze [`backend`](backend/README.md). Aby go podłączyć, uruchom go zgodnie z instrukcją i ustaw `VITE_USE_MOCK=false` oraz `VITE_API_URL=http://localhost:3001/api`.
 
 ## Kontrakt API (Node.js + MongoDB)
-Wszystkie ścieżki poza `/auth/*` wymagają nagłówka `Authorization: Bearer <token>`.
+Ścieżki mają prefiks `/api`. Wszystkie poza `POST /auth/register`, `POST /auth/login` i `GET /health` wymagają nagłówka `Authorization: Bearer <token>` (także `/auth/me`).
 Błędy: status 4xx/5xx i JSON `{ "message": "..." }`.
 
 | Metoda | Ścieżka | Body | Odpowiedź |
