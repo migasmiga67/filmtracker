@@ -34,4 +34,4 @@ Token jest tylko do odczytu, ale docelowo lepiej przepuszczać zapytania do TMDB
 
 ## Dostęp do TMDB na Vercel
 
-Ustaw `TMB_TOKEN` (API Read Access Token) lub `TMB_KEY` (API Key) w zmiennych projektu Vercel dla odpowiedniego środowiska i wykonaj Redeploy. Wystarczy jedna z nich. Obsługiwane są również `VITE_TMDB_TOKEN` i `VITE_TMDB_KEY`; mają pierwszeństwo przed odpowiadającymi im aliasami. Token ma pierwszeństwo przed kluczem API. Wszystkie te wartości trafiają do kodu przeglądarki i nie są sekretami serwera. Inne zmienne środowiska serwera nie są przez tę konfigurację udostępniane frontendowi.
+Ustaw `TMBD_TOKEN` (API Read Access Token) lub `TMBD_KEY` (API Key) w zmiennych projektu Vercel dla odpowiedniego środowiska i wykonaj Redeploy. Wystarczy jedna z nich. Nazwy `TMBD_TOKEN` i `TMBD_KEY` mają pierwszeństwo. Dla zgodności obsługiwane są też `VITE_TMDB_TOKEN` / `VITE_TMDB_KEY`, a następnie `TMB_TOKEN` / `TMB_KEY`. Token ma pierwszeństwo przed kluczem API. Wszystkie te wartości trafiają do kodu przeglądarki i nie są sekretami serwera. Inne zmienne środowiska serwera nie są przez tę konfigurację udostępniane frontendowi.
